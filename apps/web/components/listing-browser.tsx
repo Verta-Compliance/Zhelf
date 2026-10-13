@@ -6,13 +6,27 @@ import { Button } from '@fluentui/react-button';
 import { Card } from '@fluentui/react-card';
 import { Text, Title3 } from '@fluentui/react-text';
 import type { Listing, ListingCategory, ListingCondition } from '@zhelf/shared';
+import { LISTING_CATEGORIES } from '../src/categories';
+import SavedListingButton from './saved-listing-button';
 
 type CategoryFilter = 'All categories' | ListingCategory;
 type ConditionFilter = 'Any condition' | ListingCondition;
 
-export default function ListingBrowser({ listings }: { listings: Listing[] }) {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryFilter>('All categories');
+export default function ListingBrowser({
+  listings,
+  savedListingIds,
+  authenticated,
+  initialSearch,
+  initialCategory,
+}: {
+  listings: Listing[];
+  savedListingIds: string[];
+  authenticated: boolean;
+  initialSearch: string;
+  initialCategory: CategoryFilter;
+}) {
+  const [search, setSearch] = useState(initialSearch);
+  const [category, setCategory] = useState<CategoryFilter>(initialCategory);
   const [condition, setCondition] = useState<ConditionFilter>('Any condition');
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase());
 
@@ -69,8 +83,9 @@ export default function ListingBrowser({ listings }: { listings: Listing[] }) {
               }
             >
               <option>All categories</option>
-              <option>Books</option>
-              <option>Clothing</option>
+              {LISTING_CATEGORIES.map((name) => (
+                <option key={name}>{name}</option>
+              ))}
             </select>
           </label>
           <label>
@@ -151,12 +166,19 @@ export default function ListingBrowser({ listings }: { listings: Listing[] }) {
                       {listing.tradeMode}
                     </span>
                   </div>
-                  <Link
-                    href={`/listings/${listing.id}`}
-                    className='view-link'
-                  >
-                    View details
-                  </Link>
+                  <div className='card-actions'>
+                    <SavedListingButton
+                      listingId={listing.id}
+                      initiallySaved={savedListingIds.includes(listing.id)}
+                      authenticated={authenticated}
+                    />
+                    <Link
+                      href={`/listings/${listing.id}`}
+                      className='view-link'
+                    >
+                      View details
+                    </Link>
+                  </div>
                 </div>
               </div>
             </Card>

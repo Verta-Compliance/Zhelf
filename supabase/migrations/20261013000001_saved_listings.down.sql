@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS public.saved_listings;
+DROP TABLE IF EXISTS saved_listings;

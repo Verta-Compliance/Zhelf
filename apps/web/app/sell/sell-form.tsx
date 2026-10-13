@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@fluentui/react-button';
-import type { ListingTradeMode } from '@zhelf/shared';
+import type { ListingCategory, ListingTradeMode } from '@zhelf/shared';
 import api from '../../src/api';
+import { LISTING_CATEGORIES } from '../../src/categories';
 import {
   removeListingImages,
   uploadListingImages,
@@ -37,9 +38,7 @@ export default function SellForm() {
     const data = new FormData(event.currentTarget);
     const title = String(data.get('title') ?? '').trim();
     const priceValue = data.get('price');
-    const category = String(data.get('category') ?? 'Books') as
-      | 'Books'
-      | 'Clothing';
+    const category = String(data.get('category') ?? 'Books') as ListingCategory;
     const condition = String(data.get('condition') ?? 'Good') as
       | 'Like New'
       | 'Good'
@@ -143,8 +142,9 @@ export default function SellForm() {
             name='category'
             defaultValue='Books'
           >
-            <option>Books</option>
-            <option>Clothing</option>
+            {LISTING_CATEGORIES.map((name) => (
+              <option key={name}>{name}</option>
+            ))}
           </select>
         </label>
         <label>

@@ -4,6 +4,7 @@ import type {
   ListingCondition,
   ListingTradeMode,
 } from '@zhelf/shared';
+import { isListingCategory } from '../../../src/categories';
 import { createSupabaseServerClient } from '../../../src/lib/supabase/server';
 import {
   createListing,
@@ -12,9 +13,10 @@ import {
 } from '../../../src/server/database';
 
 function normalizeCategory(value: unknown): ListingCategory | null {
-  if (value === 'Books' || value === 'Clothing') return value;
-  if (value === 'books' || value === 'home') return 'Books';
+  if (isListingCategory(value)) return value;
+  if (value === 'books') return 'Books';
   if (value === 'clothing' || value === 'fashion') return 'Clothing';
+  if (value === 'home') return 'Home & Garden';
   return null;
 }
 

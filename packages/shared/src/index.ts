@@ -1,4 +1,18 @@
-export type ListingCategory = 'Books' | 'Clothing';
+export type ListingCategory =
+  | 'Books'
+  | 'Clothing'
+  | 'Shoes & Accessories'
+  | 'Electronics'
+  | 'Home & Garden'
+  | 'Toys & Games'
+  | 'Kids & Baby'
+  | 'Sports & Outdoors'
+  | 'Music & Instruments'
+  | 'Beauty & Personal Care'
+  | 'Art & Crafts'
+  | 'Movies & Media'
+  | 'Pet Supplies'
+  | 'Stationery & Office';
 export type ListingCondition = 'Like New' | 'Good' | 'Acceptable' | 'Used';
 export type ListingStatus = 'Available' | 'Reserved' | 'Sold';
 export type ListingTradeMode = 'Sell' | 'Swap' | 'Sell or swap';

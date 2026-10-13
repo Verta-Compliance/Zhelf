@@ -11,6 +11,7 @@ import type {
   ListingTradeMode,
 } from '@zhelf/shared';
 import api from '../../../src/api';
+import { LISTING_CATEGORIES } from '../../../src/categories';
 
 export default function ListingOwnerActions({ listing }: { listing: Listing }) {
   const router = useRouter();
@@ -161,8 +162,11 @@ export default function ListingOwnerActions({ listing }: { listing: Listing }) {
               updateField('category', event.target.value as ListingCategory)
             }
           >
-            <option value='Books'>Books</option>
-            <option value='Clothing'>Clothing</option>
+            {LISTING_CATEGORIES.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
           </select>
         </label>
         <label>
