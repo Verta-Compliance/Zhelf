@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const { Pool } = pg;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const migrationDirectory = resolve(root, 'supabase/migrations');
+const rollbackDirectory = resolve(root, 'supabase/rollbacks');
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
@@ -33,7 +34,7 @@ try {
       console.log('No migration to roll back.');
     } else {
       const downSql = await readFile(
-        resolve(migrationDirectory, `${name}.down.sql`),
+        resolve(rollbackDirectory, name.replace(/\.sql$/, '.down.sql')),
         'utf8',
       );
       const client = await pool.connect();
