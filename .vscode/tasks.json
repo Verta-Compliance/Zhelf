@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Emulators",
+      "type": "shell",
+      "command": "docker compose up -d postgres",
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1,
+        "instancePolicy": "silent"
+      }
+    },
+    {
+      "label": "zhelf-web: db:migrate",
+      "type": "shell",
+      "command": "npm run db:migrate",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Microsoft\\VisualStudio\\NodeJs;${env:PATH}"
+        }
+      },
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1,
+        "instancePolicy": "silent"
+      }
+    },
+    {
+      "label": "zhelf-web: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/apps/web",
+        "env": {
+          "PATH": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Microsoft\\VisualStudio\\NodeJs;${env:PATH}"
+        }
+      },
+      "dependsOn": [
+        "Start Emulators",
+        "zhelf-web: db:migrate"
+      ],
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "instancePolicy": "silent"
+      },
+      "problemMatcher": {
+        "owner": "nextjs",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\s*ready",
+          "endsPattern": "started server on"
+        }
+      }
+    }
+  ]
+}

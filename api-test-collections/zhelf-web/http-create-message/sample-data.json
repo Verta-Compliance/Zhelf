@@ -1,0 +1,5 @@
+{
+  "senderId": "00000000-0000-0000-0000-000000000001",
+  "receiverId": "00000000-0000-0000-0000-000000000002",
+  "text": "Hello from the debug API check"
+}
