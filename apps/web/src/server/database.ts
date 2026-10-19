@@ -104,6 +104,14 @@ function mapListing(row: Record<string, unknown>): Listing {
     status: String(row.status ?? 'Available') as ListingStatus,
     description: String(row.description ?? ''),
     location: String(row.location ?? ''),
+    latitude:
+      row.latitude === null || row.latitude === undefined
+        ? null
+        : toNumber(row.latitude),
+    longitude:
+      row.longitude === null || row.longitude === undefined
+        ? null
+        : toNumber(row.longitude),
     images: normalizeImages(row.images),
     seller,
     createdAt: row.created_at
@@ -271,6 +279,8 @@ export async function getListings(): Promise<Listing[]> {
         l.status,
         l.description,
         l.location,
+        l.latitude,
+        l.longitude,
         l.images,
         l.created_at,
         json_build_object(
@@ -310,6 +320,8 @@ export async function getListing(id: string): Promise<Listing | null> {
         l.status,
         l.description,
         l.location,
+        l.latitude,
+        l.longitude,
         l.images,
         l.created_at,
         json_build_object(
@@ -334,6 +346,68 @@ export async function getListing(id: string): Promise<Listing | null> {
   );
 
   return rows[0] ? mapListing(rows[0]) : null;
+}
+
+export async function getListingsByIds(ids: string[]): Promise<Listing[]> {
+  if (!ids.length) return [];
+
+  const { rows } = await pool.query(
+    `
+      SELECT
+        l.id,
+        l.title,
+        l.price,
+        l.category,
+        l.condition,
+        l.trade_mode,
+        l.swap_wanted,
+        l.status,
+        l.description,
+        l.location,
+        l.latitude,
+        l.longitude,
+        l.images,
+        l.created_at,
+        json_build_object(
+          'id', u.id,
+          'name', u.name,
+          'avatar', u.avatar,
+          'rating', u.rating,
+          'listings', COALESCE(seller_counts.total_listings, 0),
+          'location', u.location,
+          'bio', u.bio
+        ) AS seller
+      FROM listings l
+      JOIN users u ON u.id = l.seller_id
+      LEFT JOIN (
+        SELECT seller_id, COUNT(*)::int AS total_listings
+        FROM listings
+        GROUP BY seller_id
+      ) seller_counts ON seller_counts.seller_id = u.id
+      WHERE l.id = ANY($1::text[])
+    `,
+    [ids.slice(0, 1000)],
+  );
+
+  // Keep the caller's order (the search ranking).
+  const byId = new Map(rows.map((row) => [String(row.id), mapListing(row)]));
+  return ids.flatMap((id) => {
+    const listing = byId.get(id);
+    return listing ? [listing] : [];
+  });
+}
+
+export async function getTransactionListingIds(
+  transactionId: string,
+): Promise<string[]> {
+  const { rows } = await pool.query(
+    `SELECT listing_id AS id FROM transactions WHERE id = $1
+     UNION
+     SELECT offered_listing_id FROM swaps WHERE transaction_id = $1`,
+    [transactionId],
+  );
+
+  return rows.map((row) => String(row.id));
 }
 
 export async function getUser(id: string): Promise<User | null> {
@@ -397,6 +471,8 @@ export async function getUserListings(id: string): Promise<Listing[]> {
         l.status,
         l.description,
         l.location,
+        l.latitude,
+        l.longitude,
         l.images,
         l.created_at,
         json_build_object(
@@ -447,6 +523,8 @@ export async function getSavedListings(userId: string): Promise<Listing[]> {
         l.status,
         l.description,
         l.location,
+        l.latitude,
+        l.longitude,
         l.images,
         l.created_at,
         json_build_object(
@@ -518,6 +596,8 @@ export async function createListing(input: {
   description: string;
   images: string[];
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   sellerId?: string;
 }): Promise<{ id: string; status: ListingStatus }> {
   const sellerId = input.sellerId ?? '00000000-0000-0000-0000-000000000001';
@@ -538,8 +618,8 @@ export async function createListing(input: {
   );
 
   const { rows } = await pool.query(
-    `INSERT INTO listings (id, seller_id, title, price, category, condition, trade_mode, swap_wanted, status, description, location, images)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `INSERT INTO listings (id, seller_id, title, price, category, condition, trade_mode, swap_wanted, status, description, location, images, latitude, longitude)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      RETURNING id, status`,
     [
       listingId,
@@ -554,6 +634,8 @@ export async function createListing(input: {
       input.description.trim(),
       input.location.trim(),
       JSON.stringify(input.images),
+      input.latitude ?? null,
+      input.longitude ?? null,
     ],
   );
 
@@ -577,13 +659,15 @@ export async function updateListing(
     description: string;
     images: string[];
     location: string;
+    latitude?: number | null;
+    longitude?: number | null;
   },
 ): Promise<boolean> {
   const result = await pool.query(
     `UPDATE listings
      SET title = $3, price = $4, category = $5, condition = $6,
          trade_mode = $7, swap_wanted = $8, description = $9,
-         images = $10, location = $11
+         images = $10, location = $11, latitude = $12, longitude = $13
      WHERE id = $1 AND seller_id = $2
      RETURNING id`,
     [
@@ -598,6 +682,8 @@ export async function updateListing(
       input.description.trim(),
       JSON.stringify(input.images),
       input.location.trim(),
+      input.latitude ?? null,
+      input.longitude ?? null,
     ],
   );
 

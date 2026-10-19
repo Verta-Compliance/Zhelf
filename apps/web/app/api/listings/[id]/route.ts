@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getListing } from '../../../../src/server/database';
+import { getListing, updateListing } from '../../../../src/server/database';
 import { createSupabaseServerClient } from '../../../../src/lib/supabase/server';
 import { deleteListing } from '../../../../src/server/database';
+import { parseListingInput } from '../../../../src/server/listing-input';
+import { syncListingsToSearch } from '../../../../src/server/search-sync';
 
 function getOwnedStoragePath(imageUrl: string, userId: string): string | null {
   try {
@@ -34,6 +36,70 @@ export async function GET(
   }
 
   return NextResponse.json({ listing, seller: listing.seller });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'AUTH_REQUIRED',
+          message: 'Sign in to edit this listing.',
+        },
+      },
+      { status: 401 },
+    );
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'A valid JSON request body is required.',
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  const input = parseListingInput(body);
+  if (!input) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INVALID_INPUT',
+          message:
+            'Check the title, category, price, images, and swap details.',
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  const { id } = await params;
+  const updated = await updateListing(id, user.id, input);
+
+  if (!updated) {
+    return NextResponse.json(
+      { error: { code: 'NOT_FOUND', message: 'Listing not found.' } },
+      { status: 404 },
+    );
+  }
+
+  return NextResponse.json({ id });
 }
 
 export async function DELETE(

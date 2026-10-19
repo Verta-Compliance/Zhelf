@@ -12,6 +12,7 @@ import type {
 } from '@zhelf/shared';
 import api from '../../../src/api';
 import { LISTING_CATEGORIES } from '../../../src/categories';
+import LocationInput from '../../../components/location-input';
 
 export default function ListingOwnerActions({ listing }: { listing: Listing }) {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function ListingOwnerActions({ listing }: { listing: Listing }) {
     description: listing.description,
     images: listing.images,
     location: listing.location,
+    latitude: listing.latitude,
+    longitude: listing.longitude,
   });
 
   function updateField<Key extends keyof ListingCreateInput>(
@@ -163,7 +166,10 @@ export default function ListingOwnerActions({ listing }: { listing: Listing }) {
             }
           >
             {LISTING_CATEGORIES.map((name) => (
-              <option key={name} value={name}>
+              <option
+                key={name}
+                value={name}
+              >
                 {name}
               </option>
             ))}
@@ -219,15 +225,15 @@ export default function ListingOwnerActions({ listing }: { listing: Listing }) {
           onChange={(event) => updateField('description', event.target.value)}
         />
       </label>
-      <label>
-        <span>Location</span>
-        <input
-          value={form.location}
-          maxLength={160}
-          required
-          onChange={(event) => updateField('location', event.target.value)}
-        />
-      </label>
+      <LocationInput
+        value={{
+          location: form.location,
+          latitude: form.latitude ?? null,
+          longitude: form.longitude ?? null,
+        }}
+        onChange={(place) => setForm((current) => ({ ...current, ...place }))}
+        required
+      />
       <label>
         <span>Photo URLs, one per line</span>
         <textarea

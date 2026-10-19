@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '../../../../src/lib/supabase/server';
 import {
+  getTransactionListingIds,
   respondToMarketplaceOffer,
   withdrawMarketplaceOffer,
 } from '../../../../src/server/database';
+import { syncListingsToSearch } from '../../../../src/server/search-sync';
 
 export async function PATCH(
   request: Request,

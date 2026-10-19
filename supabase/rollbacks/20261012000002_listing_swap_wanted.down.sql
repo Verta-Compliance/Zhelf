@@ -1,1 +1,1 @@
-ALTER TABLE public.listings DROP COLUMN IF EXISTS swap_wanted;
+ALTER TABLE listings DROP COLUMN IF EXISTS swap_wanted;

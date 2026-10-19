@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '../../../../src/lib/supabase/server';
-import { completeMarketplaceTransaction } from '../../../../src/server/database';
+import {
+  completeMarketplaceTransaction,
+  getTransactionListingIds,
+} from '../../../../src/server/database';
+import { syncListingsToSearch } from '../../../../src/server/search-sync';
 
 export async function PATCH(
   request: Request,
@@ -46,6 +50,9 @@ export async function PATCH(
 
   const { id } = await params;
   const completed = await completeMarketplaceTransaction(id, user.id);
+  if (completed) {
+    await syncListingsToSearch(await getTransactionListingIds(id));
+  }
   return completed
     ? NextResponse.json({ id })
     : NextResponse.json(

@@ -27,11 +27,15 @@ describe('parseSuggestion', () => {
   });
 
   it('orders a reversed price range and drops unusable prices', () => {
-    expect(parseSuggestion({ ...valid, priceMin: 20, priceMax: 15 })).toMatchObject({
+    expect(
+      parseSuggestion({ ...valid, priceMin: 20, priceMax: 15 }),
+    ).toMatchObject({
       priceMin: 15,
       priceMax: 20,
     });
-    expect(parseSuggestion({ ...valid, priceMin: -5, priceMax: 'x' })).toMatchObject({
+    expect(
+      parseSuggestion({ ...valid, priceMin: -5, priceMax: 'x' }),
+    ).toMatchObject({
       priceMin: 0,
       priceMax: 0,
     });
