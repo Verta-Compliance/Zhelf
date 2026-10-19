@@ -9,6 +9,7 @@ import {
 } from '../../../src/server/database';
 import OfferPanel from './offer-panel';
 import SavedListingButton from '../../../components/saved-listing-button';
+import ListingMap from '../../../components/listing-map';
 import ReportListingButton from './report-listing-button';
 
 export default async function ListingDetailPage({
@@ -71,6 +72,11 @@ export default async function ListingDetailPage({
         </Text>
         <Text>{listing.description}</Text>
 
+        <ListingMap
+          latitude={listing.latitude}
+          longitude={listing.longitude}
+          location={listing.location}
+        />
         <SavedListingButton
           listingId={listing.id}
           initiallySaved={savedListingIds.includes(listing.id)}

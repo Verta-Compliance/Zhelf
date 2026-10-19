@@ -3,9 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@fluentui/react-button';
-import type { ListingCategory, ListingTradeMode } from '@zhelf/shared';
+import type {
+  ListingCategory,
+  ListingCondition,
+  ListingTradeMode,
+} from '@zhelf/shared';
 import api from '../../src/api';
 import { LISTING_CATEGORIES } from '../../src/categories';
+import type { ListingSuggestion } from '../../src/listing-suggestion';
+import LocationInput, {
+  type LocationValue,
+} from '../../components/location-input';
+import { requestListingSuggestion } from '../../src/lib/listing-ai';
 import {
   removeListingImages,
   uploadListingImages,
@@ -22,6 +31,19 @@ export default function SellForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [tradeMode, setTradeMode] = useState<ListingTradeMode>('Sell');
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState<ListingCategory>('Books');
+  const [condition, setCondition] = useState<ListingCondition>('Good');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [place, setPlace] = useState<LocationValue>({
+    location: '',
+    latitude: null,
+    longitude: null,
+  });
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [analysing, setAnalysing] = useState(false);
+  const [suggestion, setSuggestion] = useState<ListingSuggestion | null>(null);
   const [feedback, setFeedback] = useState<{
     type: 'info' | 'error' | 'success';
     message: string;
@@ -29,6 +51,49 @@ export default function SellForm() {
     type: 'info',
     message: '',
   });
+
+  async function analysePhotos() {
+    setAnalysing(true);
+    setSuggestion(null);
+    setFeedback({ type: 'info', message: '' });
+
+    try {
+      const result = await requestListingSuggestion(photos);
+      const details = [
+        result.brand && `Brand: ${result.brand}`,
+        result.material && `Material: ${result.material}`,
+        result.colour && `Colour: ${result.colour}`,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+
+      setSuggestion(result);
+      setTitle(result.title);
+      setCategory(result.category);
+      setCondition(result.condition);
+      setDescription(
+        details ? `${result.description}\n\n${details}` : result.description,
+      );
+      if (!price && result.priceMax > 0) {
+        setPrice(String(Math.round((result.priceMin + result.priceMax) / 2)));
+      }
+      setFeedback({
+        type: 'success',
+        message:
+          'Details filled in from your photos. Check them, add your location, then publish.',
+      });
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'We could not analyse those photos. Try again.',
+      });
+    } finally {
+      setAnalysing(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,24 +104,18 @@ export default function SellForm() {
     const title = String(data.get('title') ?? '').trim();
     const priceValue = data.get('price');
     const category = String(data.get('category') ?? 'Books') as ListingCategory;
-    const condition = String(data.get('condition') ?? 'Good') as
-      | 'Like New'
-      | 'Good'
-      | 'Acceptable'
-      | 'Used';
+    const condition = String(
+      data.get('condition') ?? 'Good',
+    ) as ListingCondition;
     const selectedTradeMode = String(
       data.get('tradeMode') ?? 'Sell',
     ) as ListingTradeMode;
     const price = selectedTradeMode === 'Swap' ? 0 : Number(priceValue);
     const swapWanted = String(data.get('swapWanted') ?? '').trim();
     const description = String(data.get('description') ?? '').trim();
-    const location = String(data.get('location') ?? '').trim();
+    const location = place.location.trim();
     const imageUrls = parseImages(String(data.get('images') ?? ''));
-    const imageFiles = data
-      .getAll('imageFiles')
-      .filter(
-        (value): value is File => value instanceof File && value.size > 0,
-      );
+    const imageFiles = photos.filter((file) => file.size > 0);
     const needsPrice = selectedTradeMode !== 'Swap';
     const needsSwapDetails = selectedTradeMode !== 'Sell';
 
@@ -90,6 +149,8 @@ export default function SellForm() {
         description,
         images: [...imageUrls, ...uploaded.urls],
         location,
+        latitude: place.latitude,
+        longitude: place.longitude,
       });
 
       setFeedback({
@@ -126,6 +187,112 @@ export default function SellForm() {
       className='form-panel'
       onSubmit={submit}
     >
+      <div className='ai-panel'>
+        <label>
+          <span>Add photos (up to 8 total, 5 MB each)</span>
+          <input
+            name='imageFiles'
+            type='file'
+            accept='image/jpeg,image/png,image/webp,image/gif'
+            multiple
+            onChange={(event) => {
+              const selected = Array.from(event.target.files ?? []);
+              event.target.value = '';
+
+              if (photos.length + selected.length > 8) {
+                setFeedback({
+                  type: 'error',
+                  message: 'You can add up to 8 photos to a listing.',
+                });
+                return;
+              }
+
+              setPhotos((current) => [...current, ...selected]);
+              setSuggestion(null);
+              setFeedback({ type: 'info', message: '' });
+            }}
+          />
+        </label>
+        <p
+          className='photo-count'
+          aria-live='polite'
+        >
+          {photos.length} of 8 photos selected. Choose one photo at a time or
+          select several together.
+        </p>
+        {photos.length ? (
+          <ul
+            className='photo-list'
+            aria-label='Selected photos'
+          >
+            {photos.map((photo, index) => (
+              <li key={`${photo.name}-${photo.lastModified}-${index}`}>
+                <span
+                  className='photo-name'
+                  title={photo.name}
+                >
+                  {photo.name}
+                </span>
+                <span className='muted'>
+                  {(photo.size / (1024 * 1024)).toFixed(1)} MB
+                </span>
+                <button
+                  type='button'
+                  className='photo-remove'
+                  aria-label={`Remove ${photo.name}`}
+                  disabled={busy || analysing}
+                  onClick={() => {
+                    setPhotos((current) =>
+                      current.filter((_, photoIndex) => photoIndex !== index),
+                    );
+                    setSuggestion(null);
+                  }}
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className='ai-panel-actions'>
+          <Button
+            appearance='secondary'
+            type='button'
+            disabled={!photos.length || analysing || busy}
+            onClick={analysePhotos}
+          >
+            {analysing
+              ? 'Looking at your photos…'
+              : 'Fill in details from photos'}
+          </Button>
+          <span className='muted'>
+            AI reads up to 4 photos and suggests the details. You can edit
+            everything.
+          </span>
+        </div>
+        {suggestion ? (
+          <div className='ai-suggestion'>
+            <p>
+              <strong>Suggested category:</strong> {suggestion.category}
+              {suggestion.subcategory ? ` → ${suggestion.subcategory}` : ''}
+            </p>
+            {suggestion.priceMax > 0 ? (
+              <p>
+                <strong>Suggested price:</strong> £{suggestion.priceMin}–£
+                {suggestion.priceMax}
+              </p>
+            ) : null}
+            <ul className='chip-list'>
+              {suggestion.brand ? <li>Brand: {suggestion.brand}</li> : null}
+              {suggestion.material ? (
+                <li>Material: {suggestion.material}</li>
+              ) : null}
+              {suggestion.colour ? <li>Colour: {suggestion.colour}</li> : null}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
       <div className='form-grid'>
         <label>
           <span>Title</span>
@@ -134,13 +301,18 @@ export default function SellForm() {
             required
             maxLength={160}
             placeholder='Vintage illustrated novel'
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
           />
         </label>
         <label>
           <span>Category</span>
           <select
             name='category'
-            defaultValue='Books'
+            value={category}
+            onChange={(event) =>
+              setCategory(event.target.value as ListingCategory)
+            }
           >
             {LISTING_CATEGORIES.map((name) => (
               <option key={name}>{name}</option>
@@ -173,13 +345,18 @@ export default function SellForm() {
             required={tradeMode !== 'Swap'}
             disabled={tradeMode === 'Swap'}
             placeholder='42.50'
+            value={price}
+            onChange={(event) => setPrice(event.target.value)}
           />
         </label>
         <label>
           <span>Condition</span>
           <select
             name='condition'
-            defaultValue='Good'
+            value={condition}
+            onChange={(event) =>
+              setCondition(event.target.value as ListingCondition)
+            }
           >
             <option>Good</option>
             <option>Like New</option>
@@ -207,28 +384,16 @@ export default function SellForm() {
           name='description'
           maxLength={4000}
           placeholder='Tell neighbors what makes this item special.'
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
         />
       </label>
 
-      <label>
-        <span>Location</span>
-        <input
-          name='location'
-          required
-          maxLength={160}
-          placeholder='Manchester'
-        />
-      </label>
-
-      <label>
-        <span>Upload photos (up to 8, 5 MB each)</span>
-        <input
-          name='imageFiles'
-          type='file'
-          accept='image/jpeg,image/png,image/webp,image/gif'
-          multiple
-        />
-      </label>
+      <LocationInput
+        value={place}
+        onChange={setPlace}
+        required
+      />
 
       <label>
         <span>Or add photo URLs, one per line</span>

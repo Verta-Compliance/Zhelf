@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS public.reviews;
-DROP TABLE IF EXISTS public.swaps;
-DROP TABLE IF EXISTS public.transactions;
-DROP TABLE IF EXISTS public.offers;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS swaps;
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS offers;
 
 DO $migration$
 BEGIN
