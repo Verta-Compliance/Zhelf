@@ -38,6 +38,8 @@ export interface Listing {
   status: ListingStatus;
   description: string;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   images: string[];
   seller: User;
   createdAt: string;
@@ -141,4 +143,7 @@ export interface ListingCreateInput {
   description: string;
   images: string[];
   location: string;
+  /** Approximate (rounded) coordinates of `location`; both or neither. */
+  latitude?: number | null;
+  longitude?: number | null;
 }

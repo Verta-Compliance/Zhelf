@@ -38,7 +38,9 @@ export function parseSuggestion(raw: unknown): ListingSuggestion | null {
   const record = raw as Record<string, unknown>;
 
   const category = LISTING_CATEGORIES.find((item) => item === record.category);
-  const condition = LISTING_CONDITIONS.find((item) => item === record.condition);
+  const condition = LISTING_CONDITIONS.find(
+    (item) => item === record.condition,
+  );
   const title = text(record.title, 160);
   if (!category || !condition || !title) return null;
 

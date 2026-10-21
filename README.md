@@ -37,7 +37,7 @@ Ensure both the migration command and app runtime use the intended `DATABASE_URL
 
 ## Supabase Setup
 
-The app uses Supabase Auth for credentials and sessions. `public.users` stores marketplace profile data keyed by the Auth user ID. PostgreSQL stores listings, saved listings, conversations, messages, offers, swaps, transactions, reviews, and listing reports.
+The app uses Supabase Auth for credentials and sessions. `users` stores marketplace profile data keyed by the Auth user ID. PostgreSQL stores listings, saved listings, conversations, messages, offers, swaps, transactions, reviews, and listing reports.
 
 Apply the migrations in `supabase/migrations` to the target database. The Supabase domain-alignment migration also creates the `listing-images` Storage bucket and authenticated owner-folder policies when Supabase Storage is available. Local PostgreSQL does not provide Supabase Auth or Storage; those services remain hosted.
 

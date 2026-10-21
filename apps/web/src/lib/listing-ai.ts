@@ -29,7 +29,9 @@ export async function requestListingSuggestion(
 ): Promise<ListingSuggestion> {
   const form = new FormData();
   const blobs = await Promise.all(files.slice(0, MAX_PHOTOS).map(downscale));
-  blobs.forEach((blob, index) => form.append('images', blob, `photo-${index}.jpg`));
+  blobs.forEach((blob, index) =>
+    form.append('images', blob, `photo-${index}.jpg`),
+  );
 
   const response = await fetch('/api/listings/analyze', {
     method: 'POST',

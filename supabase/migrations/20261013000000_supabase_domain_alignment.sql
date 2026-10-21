@@ -1,10 +1,10 @@
-CREATE TABLE IF NOT EXISTS public.offers (
+CREATE TABLE IF NOT EXISTS offers (
   id text PRIMARY KEY,
-  listing_id text NOT NULL REFERENCES public.listings(id) ON DELETE CASCADE,
-  buyer_id text NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  listing_id text NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  buyer_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   offer_type text NOT NULL CHECK (offer_type IN ('Purchase', 'Swap')),
   amount numeric(10, 2),
-  swap_listing_id text REFERENCES public.listings(id) ON DELETE SET NULL,
+  swap_listing_id text REFERENCES listings(id) ON DELETE SET NULL,
   message text NOT NULL DEFAULT '',
   status text NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted', 'Declined', 'Withdrawn', 'Expired')),
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -15,12 +15,12 @@ CREATE TABLE IF NOT EXISTS public.offers (
   )
 );
 
-CREATE TABLE IF NOT EXISTS public.transactions (
+CREATE TABLE IF NOT EXISTS transactions (
   id text PRIMARY KEY,
-  offer_id text NOT NULL UNIQUE REFERENCES public.offers(id) ON DELETE RESTRICT,
-  listing_id text NOT NULL REFERENCES public.listings(id) ON DELETE RESTRICT,
-  buyer_id text NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
-  seller_id text NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
+  offer_id text NOT NULL UNIQUE REFERENCES offers(id) ON DELETE RESTRICT,
+  listing_id text NOT NULL REFERENCES listings(id) ON DELETE RESTRICT,
+  buyer_id text NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  seller_id text NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   transaction_type text NOT NULL CHECK (transaction_type IN ('Purchase', 'Swap')),
   amount numeric(10, 2),
   status text NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Completed', 'Cancelled')),
@@ -30,23 +30,23 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   CONSTRAINT transactions_amount_valid CHECK (amount IS NULL OR amount >= 0)
 );
 
-CREATE TABLE IF NOT EXISTS public.swaps (
+CREATE TABLE IF NOT EXISTS swaps (
   id text PRIMARY KEY,
-  transaction_id text NOT NULL UNIQUE REFERENCES public.transactions(id) ON DELETE CASCADE,
-  offer_id text NOT NULL UNIQUE REFERENCES public.offers(id) ON DELETE CASCADE,
-  requested_listing_id text NOT NULL REFERENCES public.listings(id) ON DELETE RESTRICT,
-  offered_listing_id text NOT NULL REFERENCES public.listings(id) ON DELETE RESTRICT,
+  transaction_id text NOT NULL UNIQUE REFERENCES transactions(id) ON DELETE CASCADE,
+  offer_id text NOT NULL UNIQUE REFERENCES offers(id) ON DELETE CASCADE,
+  requested_listing_id text NOT NULL REFERENCES listings(id) ON DELETE RESTRICT,
+  offered_listing_id text NOT NULL REFERENCES listings(id) ON DELETE RESTRICT,
   status text NOT NULL DEFAULT 'Agreed' CHECK (status IN ('Agreed', 'Completed', 'Cancelled')),
   created_at timestamptz NOT NULL DEFAULT now(),
   completed_at timestamptz,
   CONSTRAINT swaps_distinct_listings CHECK (requested_listing_id <> offered_listing_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.reviews (
+CREATE TABLE IF NOT EXISTS reviews (
   id text PRIMARY KEY,
-  transaction_id text NOT NULL REFERENCES public.transactions(id) ON DELETE CASCADE,
-  reviewer_id text NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  reviewee_id text NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  transaction_id text NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+  reviewer_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reviewee_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rating smallint NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment text NOT NULL DEFAULT '' CHECK (length(comment) <= 2000),
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -54,11 +54,11 @@ CREATE TABLE IF NOT EXISTS public.reviews (
   CONSTRAINT reviews_once_per_transaction UNIQUE (transaction_id, reviewer_id)
 );
 
-CREATE INDEX IF NOT EXISTS offers_listing_status_idx ON public.offers (listing_id, status, created_at DESC);
-CREATE INDEX IF NOT EXISTS offers_buyer_status_idx ON public.offers (buyer_id, status, created_at DESC);
-CREATE INDEX IF NOT EXISTS transactions_participants_idx ON public.transactions (buyer_id, seller_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS swaps_status_idx ON public.swaps (status, created_at DESC);
-CREATE INDEX IF NOT EXISTS reviews_reviewee_idx ON public.reviews (reviewee_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS offers_listing_status_idx ON offers (listing_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS offers_buyer_status_idx ON offers (buyer_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS transactions_participants_idx ON transactions (buyer_id, seller_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS swaps_status_idx ON swaps (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS reviews_reviewee_idx ON reviews (reviewee_id, created_at DESC);
 
 DO $migration$
 BEGIN
