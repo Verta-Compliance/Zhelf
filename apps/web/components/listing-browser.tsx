@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight, MapPin } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { Button } from '@fluentui/react-button';
-import { Card } from '@fluentui/react-card';
-import { Text, Title3 } from '@fluentui/react-text';
+import { Text } from '@fluentui/react-text';
 import type { Listing, ListingCategory, ListingCondition } from '@zhelf/shared';
 import { LISTING_CATEGORIES } from '../src/categories';
 import SavedListingButton from './saved-listing-button';
@@ -125,63 +125,82 @@ export default function ListingBrowser({
       </div>
 
       {filteredListings.length ? (
-        <div className='card-list'>
+        <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {filteredListings.map((listing) => (
-            <Card
+            <article
               key={listing.id}
-              className='item-card'
+              className='group flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white transition-shadow duration-200 hover:shadow-md'
             >
-              <img
-                src={listing.images[0]}
-                alt={listing.title}
-                className='card-image'
-              />
-              <div className='card-body'>
-                <div className='card-top-row'>
-                  <Text
-                    size={300}
-                    className='muted'
-                  >
-                    {listing.category}
-                  </Text>
-                  <Text weight='semibold'>
-                    {listing.tradeMode === 'Swap'
-                      ? 'Swap'
-                      : `$${listing.price}`}
-                  </Text>
+              <div className='relative aspect-[4/3] overflow-hidden bg-slate-100'>
+                <img
+                  src={listing.images[0]}
+                  alt={listing.title}
+                  className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]'
+                />
+                <span className='absolute left-3 top-3 max-w-[calc(100%-4.5rem)] truncate rounded-md bg-white/95 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm'>
+                  {listing.category}
+                </span>
+                <div className='absolute right-3 top-3'>
+                  <SavedListingButton
+                    listingId={listing.id}
+                    initiallySaved={savedListingIds.includes(listing.id)}
+                    authenticated={authenticated}
+                  />
                 </div>
-                <Title3 as='h3'>{listing.title}</Title3>
-                <Text className='muted'>
-                  {listing.condition} · {listing.location}
-                </Text>
-                {listing.tradeMode !== 'Sell' ? (
-                  <Text className='muted listing-swap-summary'>
-                    Wants: {listing.swapWanted}
-                  </Text>
-                ) : null}
-                <div className='card-footer'>
-                  <div className='listing-badges'>
-                    <span className='status-badge'>{listing.status}</span>
-                    <span className='trade-mode-badge'>
-                      {listing.tradeMode}
-                    </span>
-                  </div>
-                  <div className='card-actions'>
-                    <SavedListingButton
-                      listingId={listing.id}
-                      initiallySaved={savedListingIds.includes(listing.id)}
-                      authenticated={authenticated}
-                    />
+                <span
+                  className={`absolute bottom-3 left-3 rounded-md px-2.5 py-1 text-xs font-semibold ${
+                    listing.status === 'Available'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : listing.status === 'Sold'
+                        ? 'bg-rose-100 text-rose-800'
+                        : 'bg-white/95 text-slate-700'
+                  }`}
+                >
+                  {listing.status}
+                </span>
+              </div>
+
+              <div className='flex flex-1 flex-col p-4'>
+                <div className='flex items-start justify-between gap-3'>
+                  <h3 className='line-clamp-2 min-h-12 min-w-0 flex-1 text-base font-semibold leading-6 text-slate-900'>
                     <Link
                       href={`/listings/${listing.id}`}
-                      className='view-link'
+                      className='rounded-sm transition-colors hover:text-[#d45b39] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e36b48]'
                     >
-                      View details
+                      {listing.title}
                     </Link>
-                  </div>
+                  </h3>
+                  <span className='shrink-0 text-base font-semibold text-slate-900'>
+                    {listing.tradeMode === 'Swap' ? 'Swap' : `$${listing.price}`}
+                  </span>
+                </div>
+                <p className='mt-2 flex min-w-0 items-center gap-1.5 truncate text-sm text-slate-500'>
+                  <span>{listing.condition}</span>
+                  <span aria-hidden='true'>·</span>
+                  <MapPin className='size-3.5 shrink-0' aria-hidden='true' />
+                  <span className='truncate'>{listing.location}</span>
+                </p>
+                <div className='mt-2 min-h-10'>
+                  {listing.tradeMode !== 'Sell' && listing.swapWanted ? (
+                    <p className='line-clamp-2 text-sm text-slate-600'>
+                      Wants: {listing.swapWanted}
+                    </p>
+                  ) : null}
+                </div>
+                <div className='mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4'>
+                  <span className='rounded-md bg-[#f7e7e1] px-2.5 py-1 text-xs font-semibold text-[#b94e30]'>
+                    {listing.tradeMode}
+                  </span>
+                  <Link
+                    href={`/listings/${listing.id}`}
+                    className='inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-[#d45b39] transition-colors hover:text-[#b94e30]'
+                  >
+                    View details
+                    <ArrowRight className='size-4' aria-hidden='true' />
+                  </Link>
                 </div>
               </div>
-            </Card>
+            </article>
           ))}
         </div>
       ) : (

@@ -1,11 +1,35 @@
+@import 'tailwindcss';
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 600ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
 :root {
-  --color-primary: #1e6bff;
-  --color-accent: #10b981;
-  --color-surface: #f7f9fc;
+  --color-primary: #e36b48;
+  --color-accent: #e36b48;
+  --color-surface: #f7f5f3;
   --color-surface-raised: #ffffff;
-  --color-text: #10233a;
+  --color-text: #232323;
   --color-muted: #64748b;
-  --color-border: #dce7f5;
+  --color-border: #e5dfda;
   --color-success: #16a34a;
   --color-warning: #d97706;
   --color-danger: #dc2626;
@@ -13,44 +37,46 @@
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.1);
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
+  }
 
-body {
-  min-height: 100vh;
-}
+  body {
+    min-height: 100vh;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-img {
-  max-width: 100%;
-  display: block;
-}
+  img {
+    max-width: 100%;
+    display: block;
+  }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
 
 .container {
@@ -230,35 +256,6 @@ select {
   color: var(--color-muted);
 }
 
-.hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 28px;
-  background: linear-gradient(
-    135deg,
-    rgba(30, 107, 255, 0.1),
-    rgba(16, 185, 129, 0.08)
-  );
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 32px;
-}
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  align-self: center;
-}
-
-.hero-copy {
-  display: grid;
-  justify-items: start;
-  gap: 12px;
-}
-
 .primary-link {
   display: inline-flex;
   align-items: center;
@@ -342,73 +339,6 @@ select {
   border-top: 1px solid var(--color-border);
 }
 
-.card-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 18px;
-}
-
-.item-card {
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  background: var(--color-surface-raised);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-
-.card-image {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-
-.card-body {
-  padding: 16px;
-}
-
-.card-top-row,
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.card-top-row {
-  margin-bottom: 8px;
-}
-
-.card-footer {
-  margin-top: 16px;
-}
-
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.save-listing-control {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.save-listing-error {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1;
-  width: max-content;
-  max-width: 240px;
-  padding: 6px 8px;
-  border: 1px solid var(--color-danger);
-  border-radius: 6px;
-  background: var(--color-surface-raised);
-  color: var(--color-danger);
-  font-size: 12px;
-}
-
 .status-badge {
   display: inline-flex;
   padding: 5px 10px;
@@ -419,32 +349,13 @@ select {
   font-weight: 600;
 }
 
-.trade-mode-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border: 1px solid rgba(30, 107, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(30, 107, 255, 0.07);
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .swap-wanted {
   display: grid;
   gap: 4px;
   margin: 12px 0;
   padding: 12px;
   border-left: 3px solid var(--color-accent);
-  background: rgba(16, 185, 129, 0.07);
-}
-
-.listing-swap-summary {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  background: rgba(227, 107, 72, 0.08);
 }
 
 .offer-panel,
@@ -675,8 +586,8 @@ select {
   margin-top: 16px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(30, 107, 255, 0.08);
-  border: 1px solid rgba(30, 107, 255, 0.18);
+  background: rgba(227, 107, 72, 0.08);
+  border: 1px solid rgba(227, 107, 72, 0.2);
   color: var(--color-text);
 }
 
@@ -698,27 +609,29 @@ select {
   gap: 16px;
 }
 
-label {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: var(--color-text);
-  font-weight: 600;
-}
+@layer base {
+  label {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: var(--color-text);
+    font-weight: 600;
+  }
 
-input,
-textarea,
-select {
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: #fff;
-  padding: 10px 12px;
-  color: var(--color-text);
-}
+  input,
+  textarea,
+  select {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+    color: var(--color-text);
+  }
 
-textarea {
-  min-height: 120px;
-  resize: vertical;
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
 }
 
 .listing-page {
@@ -770,7 +683,7 @@ textarea {
   padding: 12px 14px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: rgba(30, 107, 255, 0.02);
+  background: rgba(227, 107, 72, 0.035);
 }
 
 .seller-card img {
@@ -885,8 +798,8 @@ th {
 
 .conversation-message.own {
   justify-self: end;
-  border-color: rgba(30, 107, 255, 0.25);
-  background: rgba(30, 107, 255, 0.08);
+  border-color: rgba(227, 107, 72, 0.28);
+  background: rgba(227, 107, 72, 0.08);
 }
 
 .conversation-message.other {
@@ -956,7 +869,7 @@ th {
   padding: 14px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: rgba(30, 107, 255, 0.02);
+  background: rgba(227, 107, 72, 0.035);
 }
 
 .profile-stat strong {
@@ -977,7 +890,7 @@ th {
   padding: 10px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: rgba(16, 185, 129, 0.02);
+  background: rgba(227, 107, 72, 0.035);
 }
 
 .profile-list-item img {
@@ -1043,11 +956,6 @@ th {
   .browse-filters {
     grid-template-columns: 1fr;
     gap: 0;
-  }
-
-  .hero-actions {
-    align-self: flex-start;
-    flex-wrap: wrap;
   }
 
   .profile-header,

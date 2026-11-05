@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BookmarkFilled, BookmarkRegular } from '@fluentui/react-icons';
-import { Button } from '@fluentui/react-button';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '../src/api';
 
@@ -49,20 +48,26 @@ export default function SavedListingButton({
   }
 
   return (
-    <span className='save-listing-control'>
-      <Button
-        appearance='subtle'
-        icon={saved ? <BookmarkFilled /> : <BookmarkRegular />}
+    <span className='relative inline-flex'>
+      <button
+        type='button'
+        className='flex size-10 items-center justify-center rounded-full border border-white/80 bg-white/95 text-slate-700 shadow-sm transition-colors hover:bg-white hover:text-[#d45b39] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e36b48] disabled:cursor-wait disabled:opacity-60'
         aria-label={label}
         aria-pressed={saved}
         title={label}
         disabled={busy}
         onClick={toggleSaved}
-      />
+      >
+        {saved ? (
+          <BookmarkCheck className='size-5 text-[#d45b39]' aria-hidden='true' />
+        ) : (
+          <Bookmark className='size-5' aria-hidden='true' />
+        )}
+      </button>
       {error ? (
         <span
           role='alert'
-          className='save-listing-error'
+          className='absolute right-0 top-full z-30 mt-2 w-max max-w-60 rounded-md border border-red-200 bg-white p-2 text-xs text-red-700 shadow-lg'
         >
           {error}
         </span>
